@@ -27,8 +27,15 @@ class PyQuilWindow(gtk.Window):
         vbox.pack_start(notebook)
         
         self.documents = []
-        
-        self.add_menu('file', '_File', None)
+
+        file_menu = gtk.Menu()
+        menu = self.add_menu('file', '_File', file_menu)
+        new = gtk.ImageMenuItem(gtk.STOCK_NEW)
+        new.connect('activate', self.new_file)
+        menu.append(new)
+        quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+        quit.connect('activate', self.quit)
+        menu.append(quit)
 
         self.connect('delete-event', lambda *a: gtk.main_quit())
 
@@ -45,6 +52,7 @@ class PyQuilWindow(gtk.Window):
             self.documents.append(document)
         else:
             self.documents.insert(position, document)
+
         return document
 
     def add_menu(self, name, title, menu=None, position=None):
@@ -59,6 +67,14 @@ class PyQuilWindow(gtk.Window):
         else:
             self.menubar.insert(item, position)
         return menu
+
+    def new_file(self, *args):
+        doc = self.add_fresh_document()
+        page_num = self.notebook.page_num(doc)
+        self.notebook.set_current_page(page_num)
+
+    def quit(self, *args):
+        gtk.main_quit()
 
     def run(self):
         gtk.main()
