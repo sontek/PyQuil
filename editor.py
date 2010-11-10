@@ -2,6 +2,7 @@ import gtk
 import pango
 from pygments.lexers import SqlLexer
 from pygments.styles import get_style_by_name
+from pygments.styles.colorful import ColorfulStyle
 from pygments.token import STANDARD_TYPES, Token
 
 STANDARD_TOKENS = STANDARD_TYPES.keys()
@@ -16,7 +17,7 @@ class PyQuilEditor(gtk.TextView):
         self.hl_style = None
         self._generated_styles = set()
         
-        self.set_style('default')
+        self.set_style(ColorfulStyle)
         self.set_lexer(SqlLexer())
         
         self._changehandler = buf.connect_after('changed', self._on_change)
