@@ -20,15 +20,23 @@ pygtk.require('2.0')
 
 import gtk
 import pango
-from pygments.lexers import PythonLexer
+from pygments.lexers import SqlLexer
 from pygments.styles.colorful import ColorfulStyle
 
 STYLE = ColorfulStyle
-f = file(__file__)
-try:
-    SOURCE = f.read()
-finally:
-    f.close()
+SOURCE = """ 
+          SELECT * FROM tblRegistrations r
+          JOIN tblCountries c on r.CountryID = c.CountryID
+          JOIN tblActivityRegistrations ar on ar.RegId = r.RegId
+          WHERE r.ProgramCode = 'FooBar'
+          AND r.RegId IN (1234, 4321, 1337)
+          ORDER BY r.FirstName, r.LastName
+        """
+#f = file(__file__)
+#try:
+#    SOURCE = f.read()
+#finally:
+#    f.close()
 
 
 class PyQuilWindow(gtk.Window):
@@ -44,7 +52,7 @@ class PyQuilWindow(gtk.Window):
         buf = gtk.TextBuffer()
 
         styles = {}
-        for token, value in PythonLexer().get_tokens(SOURCE):
+        for token, value in SqlLexer().get_tokens(SOURCE):
             while not STYLE.styles_token(token) and token.parent:
                 token = token.parent
             if token not in styles:
