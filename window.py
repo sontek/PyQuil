@@ -13,9 +13,6 @@ class PyQuilWindow(gtk.Window):
         self.textview = PyQuilEditor()
         win.add(self.textview)
         self.connect('delete-event', lambda *a: gtk.main_quit())
-
-        self.textview.modify_font(pango.FontDescription('monospace'))
-
         self.resize(800, 500)
         self.show_all()
 
