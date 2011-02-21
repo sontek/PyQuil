@@ -1,0 +1,14 @@
+You need to provide protocol and query string
+=============================================
+
+sqlite
+======
+sqlite:///test.db
+
+mssql
+=====
+mssql+pyodbc:///DRIVER={FreeTDS};SERVERNAME=orchid;UID=sa;PWD=pwd;DATABASE=db'
+ - Driver is defined in odbcinst.ini 
+ - servername is defined freetds.conf 
+
+If you are on windows use DRIVER={SQL SERVER} instead.

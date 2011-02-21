@@ -116,15 +116,20 @@ class PyQuilWindow(gtk.Window):
         connection = e.connect()
         results = connection.execute(query)
         data = results.fetchall()
+        e.dispose()
         connection.close()
 
         types = []
         if data:
             for item in data[0]:
-                if str(item).isdigit():
-                    types.append(gobject.TYPE_INT)
-                else:
-                    types.append(gobject.TYPE_STRING)
+                types.append(str)
+                #                t = type(str)
+#                if t in [str, int, bool]:
+#                    types.append(t)
+#                elif t == unicode:
+#                    types.append(str)
+#                else:
+#                    types.append(gobject.TYPE_OBJECT)
 
             liststore = gtk.ListStore(*types)
 
