@@ -26,13 +26,13 @@ class PyQuilWindow(gtk.Window):
         self.connection_string = gtk.Entry()
         self.connection_string.set_text('sqlite:///test.db')
         vbox.pack_start(self.connection_string)
-        
+
         self.notebook = notebook = gtk.Notebook()
         notebook.set_tab_pos(gtk.POS_TOP)
         notebook.set_scrollable(True)
         notebook.show_all()
         vbox.pack_start(notebook)
-        
+
         self.documents = []
 
         file_menu = gtk.Menu()
@@ -105,9 +105,10 @@ class PyQuilWindow(gtk.Window):
         result_text = gtk.TextView()
         data = results.fetchall()
         text = ''
-
-        for item in data:
-            text +='\n' + str(item)
+        print_items = ['\t|\t'.join([str(c) for c in b]) for a,b in enumerate(data)]
+        text += '\t|\t'.join(results.keys())
+        text += '\n'
+        text += '\n'.join(print_items)
 
         result_text.get_buffer().set_text(text)
         result_view.add(result_text)
