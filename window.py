@@ -109,7 +109,6 @@ class PyQuilWindow(gtk.Window):
         for item in data:
             text +='\n' + str(item)
 
-        import ipdb;ipdb.set_trace()
         result_text.get_buffer().set_text(text)
         result_view.add(result_text)
         self.vbox.pack_start(result_view)
