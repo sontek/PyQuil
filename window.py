@@ -2,6 +2,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import pango
+import gobject
 from editor import PyQuilEditor
 
 from sqlalchemy import create_engine
@@ -102,19 +103,48 @@ class PyQuilWindow(gtk.Window):
         results = connection.execute(query)
         connection.close()
         result_view = gtk.ScrolledWindow()
-        result_text = gtk.TextView()
         data = results.fetchall()
-        text = ''
-        print_items = ['\t|\t'.join([str(c) for c in b]) for a,b in enumerate(data)]
-        text += '\t|\t'.join(results.keys())
-        text += '\n'
-        text += '\n'.join(print_items)
 
-        result_text.get_buffer().set_text(text)
-        result_view.add(result_text)
+        types = []
+        for item in data[0]:
+            if str(item).isdigit():
+                types.append(gobject.TYPE_INT)
+            else:
+                types.append(gobject.TYPE_STRING)
+
+        liststore = gtk.ListStore(*types)
+
+        for row in [b for a, b in enumerate(data)]:
+            liststore.append([b for a, b in enumerate(row)])
+
+        treeview = gtk.TreeView(model=liststore)
+
+        tvcolumns={} # the columns
+        cells={} # the cells
+        i=0
+        for c in results.keys(): # the actual column headers
+            # instantiate TVC
+            tvcolumns[c] = gtk.TreeViewColumn(c)
+
+            # add to the treeview
+            treeview.append_column(tvcolumns[c])
+
+            # instantiate and add the cell object
+            cells[c]=gtk.CellRendererText()
+            tvcolumns[c].pack_start(cells[c], True) #add the cell to the column, allow it to expand
+
+            # now set the cell's text attribute to the treeview's column i (0,1)
+            tvcolumns[c].add_attribute(cells[c], 'text', i)
+
+            #make it searchable and sortable
+            treeview.set_search_column(i)
+            tvcolumns[c].set_sort_column_id(i)
+            i+=1
+
+        result_view.add(treeview)
         self.vbox.pack_start(result_view)
-        result_text.show()
         result_view.show()
+        treeview.show()
 
     def run(self):
         gtk.main()
