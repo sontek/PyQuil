@@ -11,6 +11,7 @@ import pyodbc
 class PyQuilWindow(gtk.Window):
     def __init__(self):
         super(PyQuilWindow, self).__init__()
+        self.tree_view = None
 
         self.resize(800, 500)
         self.set_title('PyQuil')
@@ -57,6 +58,9 @@ class PyQuilWindow(gtk.Window):
 
         self.show_all()
 
+        self.result_view = gtk.ScrolledWindow()
+        self.vbox.pack_start(self.result_view)
+
     def add_fresh_document(self, position=-1):
         document = gtk.ScrolledWindow()
         self.editor = PyQuilEditor()
@@ -102,7 +106,6 @@ class PyQuilWindow(gtk.Window):
         connection = e.connect()
         results = connection.execute(query)
         connection.close()
-        result_view = gtk.ScrolledWindow()
         data = results.fetchall()
 
         types = []
@@ -116,8 +119,11 @@ class PyQuilWindow(gtk.Window):
 
         for row in [b for a, b in enumerate(data)]:
             liststore.append([b for a, b in enumerate(row)])
+        
+        if (self.tree_view):
+            self.result_view.remove(self.tree_view)
 
-        treeview = gtk.TreeView(model=liststore)
+        self.tree_view = gtk.TreeView(model=liststore)
 
         tvcolumns={} # the columns
         cells={} # the cells
@@ -127,7 +133,7 @@ class PyQuilWindow(gtk.Window):
             tvcolumns[c] = gtk.TreeViewColumn(c)
 
             # add to the treeview
-            treeview.append_column(tvcolumns[c])
+            self.tree_view.append_column(tvcolumns[c])
 
             # instantiate and add the cell object
             cells[c]=gtk.CellRendererText()
@@ -137,14 +143,13 @@ class PyQuilWindow(gtk.Window):
             tvcolumns[c].add_attribute(cells[c], 'text', i)
 
             #make it searchable and sortable
-            treeview.set_search_column(i)
+            self.tree_view.set_search_column(i)
             tvcolumns[c].set_sort_column_id(i)
             i+=1
 
-        result_view.add(treeview)
-        self.vbox.pack_start(result_view)
-        result_view.show()
-        treeview.show()
+        self.result_view.add(self.tree_view)
+        self.result_view.show()
+        self.tree_view.show()
 
     def run(self):
         gtk.main()
