@@ -14,3 +14,9 @@ mssql+pyodbc:///DRIVER={FreeTDS};SERVERNAME=orchid;UID=sa;PWD=pwd;DATABASE=db'
 If you are on windows use DRIVER={SQL SERVER} instead.
 
 MSSQL driver does not support SELECT *, you must provide the columns you want.
+
+Postgres:
+postgresql+psycopg2://user:password@host:port/dbname
+
+All others:
+http://www.sqlalchemy.org/docs/dialects/
