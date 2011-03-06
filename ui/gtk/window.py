@@ -129,51 +129,58 @@ class PyQuilGtkWindow(gtk.Window):
             from plugins.sqlalchemy import SAQueryPlugin
             plugin = SAQueryPlugin()
         elif selected_plugin == _('MSSQL'):
-            from plugins.sqlalchemy import SAQueryPlugin
+            from plugins.mssql import MSSQLQueryPlugin
             plugin = MSSQLQueryPlugin()
 
-        columns, data = plugin.execute_query(conn_string, query)
+        try:
+            columns, data = plugin.execute_query(conn_string, query)
+            types = []
+            if data:
+                for item in data[0]:
+                    types.append(str)
 
-        types = []
-        if data:
-            for item in data[0]:
-                types.append(str)
+                liststore = gtk.ListStore(*types)
 
-            liststore = gtk.ListStore(*types)
+                for row in [b for a, b in enumerate(data)]:
+                    liststore.append([b for a, b in enumerate(row)])
 
-            for row in [b for a, b in enumerate(data)]:
-                liststore.append([b for a, b in enumerate(row)])
+                if (doc.tree_view):
+                    doc.remove(doc.tree_view)
 
-            if (doc.tree_view):
-                doc.remove(doc.tree_view)
+                tree_view = gtk.TreeView(model=liststore)
 
-            tree_view = gtk.TreeView(model=liststore)
+                tvcolumns={} # the columns
+                cells={} # the cells
+                i=0
+                for c in columns: # the actual column headers
+                    # instantiate TVC
+                    tvcolumns[c] = gtk.TreeViewColumn(c)
 
-            tvcolumns={} # the columns
-            cells={} # the cells
-            i=0
-            for c in columns: # the actual column headers
-                # instantiate TVC
-                tvcolumns[c] = gtk.TreeViewColumn(c)
+                    # add to the treeview
+                    tree_view.append_column(tvcolumns[c])
 
-                # add to the treeview
-                tree_view.append_column(tvcolumns[c])
+                    # instantiate and add the cell object
+                    cells[c]=gtk.CellRendererText()
+                    tvcolumns[c].pack_start(cells[c], True) #add the cell to the column, allow it to expand
 
-                # instantiate and add the cell object
-                cells[c]=gtk.CellRendererText()
-                tvcolumns[c].pack_start(cells[c], True) #add the cell to the column, allow it to expand
+                    # now set the cell's text attribute to the treeview's column i (0,1)
+                    tvcolumns[c].add_attribute(cells[c], 'text', i)
 
-                # now set the cell's text attribute to the treeview's column i (0,1)
-                tvcolumns[c].add_attribute(cells[c], 'text', i)
+                    #make it searchable and sortable
+                    tree_view.set_search_column(i)
+                    tvcolumns[c].set_sort_column_id(i)
+                    i+=1
 
-                #make it searchable and sortable
-                tree_view.set_search_column(i)
-                tvcolumns[c].set_sort_column_id(i)
-                i+=1
+                doc.set_treeview(tree_view)
+                doc.show()
+                doc.tree_view.show()
+        except Exception as exc:
+            md = gtk.MessageDialog(self, 
+                    gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, 
+                    gtk.BUTTONS_CLOSE, str(exc))
+            md.run()
+            md.destroy()
 
-            doc.set_treeview(tree_view)
-            doc.show()
-            doc.tree_view.show()
 
     def run(self):
         gtk.main()
