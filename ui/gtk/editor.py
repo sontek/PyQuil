@@ -11,6 +11,7 @@ from pygments.styles import get_style_by_name
 from pygments.styles.colorful import ColorfulStyle
 from pygments.token import STANDARD_TYPES, Token
 from lib.common import _
+from lib.pluginfactory import get_plugin
 
 STANDARD_TOKENS = STANDARD_TYPES.keys()
 
@@ -20,6 +21,39 @@ class PyQuilDocument(gtk.VBox):
     def __init__(self):
         super(gtk.VBox, self).__init__()
         self.hbox = gtk.HBox()
+        
+        self.__init_plugins()
+
+        self.result_window = None
+
+        self.connection_string = gtk.Entry()
+
+        # Just setting defaults for testing
+        self.connection_string.set_text(_('sqlite:///test.db'))
+        self.hbox.pack_start(self.connection_string, True)
+
+        self.button_connect = gtk.Button(label=_("Connect"))
+        self.connect_handler = self.button_connect.connect('clicked', self.connect)
+        self.hbox.pack_start(self.button_connect, False, False)
+
+        self.button_execute = gtk.Button(label=_("Execute"))
+        self.button_execute.connect('clicked', self.execute)
+        self.button_execute.set_sensitive(False)
+        self.hbox.pack_start(self.button_execute, False, False)
+
+        self.pack_start(self.hbox, False, False)
+        editor_window = gtk.ScrolledWindow()
+        self.editor = PyQuilGtkEditor()
+
+        # Just setting defaults for testing
+        self.editor.get_buffer().set_text(_("SELECT * FROM memos"))
+        editor_window.add(self.editor)
+        self.pack_start(editor_window)
+        self.tree_view = None
+
+        self.show_all()
+
+    def __init_plugins(self):
         plugin_store = gtk.ListStore(gobject.TYPE_STRING)
         plugin_store.append ([_("Sql Alchemy")])
         plugin_store.append ([_("MSSQL")])
@@ -30,48 +64,47 @@ class PyQuilDocument(gtk.VBox):
         self.combo_plugin.pack_start(cell, True)
         self.combo_plugin.add_attribute(cell, 'text', 0)
         self.combo_plugin.set_active(0)
-        self.result_window = None
 
         self.hbox.pack_start(self.combo_plugin, False, False)
 
-        self.connection_string = gtk.Entry()
-        self.connection_string.set_text(_('sqlite:///test.db'))
-        self.hbox.pack_start(self.connection_string, True)
+    def connect(self, *args):
+        conn_string = self.connection_string.get_text()
+        selected_plugin = self.combo_plugin.get_active_text()
 
-        self.button_execute = gtk.Button(label=_("Execute"))
-        self.button_execute.connect('clicked', self.execute)
-        self.hbox.pack_start(self.button_execute, False, False)
+        self.plugin = get_plugin(selected_plugin)
 
-        self.pack_start(self.hbox, False, False)
-        editor_window = gtk.ScrolledWindow()
-        self.editor = PyQuilGtkEditor()
-        self.editor.get_buffer().set_text(_("SELECT * FROM memos"))
-        editor_window.add(self.editor)
-        self.pack_start(editor_window)
-        self.tree_view = None
+        try:
+            self.plugin.connect(conn_string)
+            self.button_execute.set_sensitive(True)
 
-        self.show_all()
+            self.button_connect.disconnect(self.connect_handler)
+            self.button_connect.set_label(_('Disconnect'))
+            self.disconnect_handler = self.button_connect.connect('clicked', self.disconnect)
+        except Exception as exc:
+            self.display_error(str(exc))
+
+    
+    def disconnect(self, *args):
+        try:
+            self.plugin.disconnect()
+
+            self.button_execute.set_sensitive(False)
+            self.button_connect.disconnect(self.disconnect_handler)
+            self.button_connect.set_label(_('Connect'))
+            self.connect_handler = self.button_connect.connect('clicked', self.connect)
+        except Exception as exc:
+            self.display_error(str(exc))
 
     def execute(self, *args):
         buf = self.editor.get_buffer()
         start = buf.get_start_iter()
         end = buf.get_end_iter()
         query = buf.get_slice(start, end)
-        conn_string = self.connection_string.get_text()
 
         data = None
-        plugin = None
-        selected_plugin = self.combo_plugin.get_active_text()
-
-        if selected_plugin == _('Sql Alchemy'):
-            from plugins.sqlalchemy import SAQueryPlugin
-            plugin = SAQueryPlugin()
-        elif selected_plugin == _('MSSQL'):
-            from plugins.mssql import MSSQLQueryPlugin
-            plugin = MSSQLQueryPlugin()
 
         try:
-            columns, data = plugin.execute_query(conn_string, query)
+            columns, data = self.plugin.execute_query(query)
             types = []
             if data:
                 for item in data[0]:
@@ -109,12 +142,14 @@ class PyQuilDocument(gtk.VBox):
                 self.set_treeview(tree_view)
                 self.show_all()
         except Exception as exc:
+            self.display_error(str(exc))
+
+    def display_error(self, message):
             md = gtk.MessageDialog(None,
                     gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR,
-                    gtk.BUTTONS_CLOSE, str(exc))
+                    gtk.BUTTONS_CLOSE, message)
             md.run()
             md.destroy()
-
     def set_treeview(self, tree_view):
         self.tree_view = tree_view
 
@@ -181,12 +216,12 @@ class PyQuilGtkEditor(gtk.TextView):
                 tag.set_property('style', pango.STYLE_ITALIC)
             if style['underline']:
                 tag.set_property('underline', pango.UNDERLINE_SINGLE)
-    
+
     def _on_change(self, buf):
         buf.handler_block(self._changehandler)
         self.rehighlight(buf)
         buf.handler_unblock(self._changehandler)
-    
+
     def rehighlight(self, buf):
         start = buf.get_start_iter()
         end = buf.get_end_iter()

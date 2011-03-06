@@ -16,46 +16,50 @@ from lib.common import _
 class PyQuilGtkWindow(gtk.Window):
     def __init__(self):
         super(PyQuilGtkWindow, self).__init__()
+
+        # A decent default size
         self.resize(800, 500)
         self.set_title(_('PyQuil'))
 
-        self.vbox = vbox  = gtk.VBox()
-        self.add(vbox)
+        self.vbox = gtk.VBox()
+        self.add(self.vbox)
 
+        # create our file menu
+        self.__init_menubar()
+
+        # create the tabbed interface
+        self.__init_notebook()
+
+        self.connect('delete-event', lambda *a: gtk.main_quit())
+
+        self.new_tab()
+
+        self.show_all()
+
+    def __init_menubar(self):
         self.menubar = gtk.MenuBar()
         self.menus = {}
         self.menubar_items = {}
 
-        vbox.pack_start(self.menubar, False, False)
-
-        self.notebook = notebook = gtk.Notebook()
-        notebook.set_tab_pos(gtk.POS_TOP)
-        notebook.set_scrollable(True)
-        notebook.show_all()
-        vbox.pack_start(notebook)
+        self.vbox.pack_start(self.menubar, False, False)
 
         file_menu = gtk.Menu()
         menu = self.add_menu('file', _('_File'), file_menu)
 
         new = gtk.ImageMenuItem(gtk.STOCK_NEW)
-        new.connect('activate', self.new_file)
+        new.connect('activate', self.new_tab)
         menu.append(new)
 
         quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         quit.connect('activate', self.quit)
         menu.append(quit)
 
-        self.connect('delete-event', lambda *a: gtk.main_quit())
-
-        self.add_fresh_document()
-
-        self.show_all()
-
-    def add_fresh_document(self, position=-1):
-        document = PyQuilDocument()
-        self.notebook.insert_page(document)
-        document.show()
-        return document
+    def __init_notebook(self):
+        self.notebook = gtk.Notebook()
+        self.notebook.set_tab_pos(gtk.POS_TOP)
+        self.notebook.set_scrollable(True)
+        self.notebook.show_all()
+        self.vbox.pack_start(self.notebook)
 
     def add_menu(self, name, title, menu=None, position=None):
         item = gtk.MenuItem(title)
@@ -70,16 +74,15 @@ class PyQuilGtkWindow(gtk.Window):
             self.menubar.insert(item, position)
         return menu
 
-    def new_file(self, *args):
-        doc = self.add_fresh_document()
-        page_num = self.notebook.page_num(doc)
+    def new_tab(self, *args):
+        document = PyQuilDocument()
+        self.notebook.insert_page(document)
+        page_num = self.notebook.page_num(document)
         self.notebook.set_current_page(page_num)
-        doc.show()
+        document.show()
 
     def quit(self, *args):
         gtk.main_quit()
-
-
 
     def run(self):
         gtk.main()
