@@ -9,6 +9,19 @@ STANDARD_TOKENS = STANDARD_TYPES.keys()
 
 tag_name = lambda sn, token: sn + '_' + str(token).replace('.', '_').lower()
 
+class PyQuilDocument(gtk.VBox):
+    def __init__(self, editor, tree_view):
+        super(gtk.VBox, self).__init__()
+        self.editor = editor
+        self.pack_start(self.editor, True)
+        self.tree_view = tree_view
+        if self.tree_view:
+            self.pack_start(tree_view, True)
+
+    def set_treeview(self, tree_view):
+        self.tree_view = tree_view
+        if self.tree_view:
+            self.pack_start(self.tree_view, True)
 
 class PyQuilGtkEditor(gtk.TextView):
     def __init__(self):

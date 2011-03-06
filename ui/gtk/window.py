@@ -5,7 +5,7 @@ import gtk
 import pango
 import gobject
 
-from ui.gtk.editor import PyQuilGtkEditor
+from ui.gtk.editor import PyQuilGtkEditor, PyQuilDocument
 from lib.common import _
 
 class PyQuilGtkWindow(gtk.Window):
@@ -73,21 +73,20 @@ class PyQuilGtkWindow(gtk.Window):
 
         self.show_all()
 
-        self.result_view = gtk.ScrolledWindow()
-        self.vbox.pack_start(self.result_view)
-
     def add_fresh_document(self, position=-1):
-        document = gtk.ScrolledWindow()
-        self.editor = PyQuilGtkEditor()
-        self.editor.get_buffer().set_text(_("SELECT * FROM memos"))
-        document.add(self.editor)
+        editor = PyQuilGtkEditor()
+        editor.get_buffer().set_text(_("SELECT * FROM memos"))
 
+        document = PyQuilDocument(editor, None)
         self.notebook.insert_page(document)
+
         if position == -1:
             self.documents.append(document)
         else:
             self.documents.insert(position, document)
 
+        editor.show()
+        document.show()
         return document
 
     def add_menu(self, name, title, menu=None, position=None):
@@ -107,13 +106,16 @@ class PyQuilGtkWindow(gtk.Window):
         doc = self.add_fresh_document()
         page_num = self.notebook.page_num(doc)
         self.notebook.set_current_page(page_num)
+        doc.show()
 
     def quit(self, *args):
         gtk.main_quit()
 
     def execute(self, *args):
-        print 'executed'
-        buf = self.editor.get_buffer()
+        page = self.notebook.get_current_page()
+        doc = self.notebook.get_nth_page(page)
+        editor = doc.editor
+        buf = editor.get_buffer()
         start = buf.get_start_iter()
         end = buf.get_end_iter()
         query = buf.get_slice(start, end)
@@ -136,23 +138,16 @@ class PyQuilGtkWindow(gtk.Window):
         if data:
             for item in data[0]:
                 types.append(str)
-                #                t = type(str)
-#                if t in [str, int, bool]:
-#                    types.append(t)
-#                elif t == unicode:
-#                    types.append(str)
-#                else:
-#                    types.append(gobject.TYPE_OBJECT)
 
             liststore = gtk.ListStore(*types)
 
             for row in [b for a, b in enumerate(data)]:
                 liststore.append([b for a, b in enumerate(row)])
 
-            if (self.tree_view):
-                self.result_view.remove(self.tree_view)
+            if (doc.tree_view):
+                doc.remove(doc.tree_view)
 
-            self.tree_view = gtk.TreeView(model=liststore)
+            tree_view = gtk.TreeView(model=liststore)
 
             tvcolumns={} # the columns
             cells={} # the cells
@@ -162,7 +157,7 @@ class PyQuilGtkWindow(gtk.Window):
                 tvcolumns[c] = gtk.TreeViewColumn(c)
 
                 # add to the treeview
-                self.tree_view.append_column(tvcolumns[c])
+                tree_view.append_column(tvcolumns[c])
 
                 # instantiate and add the cell object
                 cells[c]=gtk.CellRendererText()
@@ -172,13 +167,13 @@ class PyQuilGtkWindow(gtk.Window):
                 tvcolumns[c].add_attribute(cells[c], 'text', i)
 
                 #make it searchable and sortable
-                self.tree_view.set_search_column(i)
+                tree_view.set_search_column(i)
                 tvcolumns[c].set_sort_column_id(i)
                 i+=1
 
-            self.result_view.add(self.tree_view)
-            self.result_view.show()
-            self.tree_view.show()
+            doc.set_treeview(tree_view)
+            doc.show()
+            doc.tree_view.show()
 
     def run(self):
         gtk.main()
