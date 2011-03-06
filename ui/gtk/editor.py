@@ -80,7 +80,7 @@ class PyQuilDocument(gtk.VBox):
                 liststore = gtk.ListStore(*types)
 
                 for row in [b for a, b in enumerate(data)]:
-                    liststore.append([b for a, b in enumerate(row)])
+                    liststore.append([str(b) for a, b in enumerate(row)])
 
                 tree_view = gtk.TreeView(model=liststore)
 
