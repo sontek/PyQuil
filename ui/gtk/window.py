@@ -82,6 +82,14 @@ class PyQuilGtkWindow(gtk.Window):
         document.show()
 
     def quit(self, *args):
+        num_pages = self.notebook.get_n_pages()
+
+        for i in range(0, num_pages):
+            page = self.notebook.get_nth_page(i)
+
+            if page.plugin:
+                page.plugin.disconnect()
+
         gtk.main_quit()
 
     def run(self):

@@ -25,6 +25,7 @@ class PyQuilDocument(gtk.VBox):
         self.__init_plugins()
 
         self.result_window = None
+        self.plugin = None
 
         self.connection_string = gtk.Entry()
 
