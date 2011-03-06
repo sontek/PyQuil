@@ -20,7 +20,8 @@ class MSSQLQueryPlugin(object):
         connection = e.connect()
         results = connection.execute(query)
 
-        if results.rowcount > 0:
+        # if cursor is closed, we aren't fetching rows
+        if results.closed:
             return [(_('Results', ))], [(_('%d Row(s) modified' % results.rowcount), )]
 
         data = results.fetchall()
