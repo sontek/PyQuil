@@ -19,7 +19,6 @@ class MSSQLQueryPlugin(object):
         except ResourceClosedError as exc:
             if str(exc) == 'This result object does not return rows. It has been closed automatically.':
                 return [(_('Results', ))], [(_('%d Row(s) modified' % results.rowcount), )]
-                print exc
             else:
                 raise exc
         finally:
