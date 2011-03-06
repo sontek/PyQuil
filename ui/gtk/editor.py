@@ -117,6 +117,7 @@ class PyQuilDocument(gtk.VBox):
 
     def set_treeview(self, tree_view):
         self.tree_view = tree_view
+
         if self.result_window:
             self.remove(self.result_window)
 

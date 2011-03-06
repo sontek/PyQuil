@@ -16,8 +16,6 @@ from lib.common import _
 class PyQuilGtkWindow(gtk.Window):
     def __init__(self):
         super(PyQuilGtkWindow, self).__init__()
-        self.tree_view = None
-
         self.resize(800, 500)
         self.set_title(_('PyQuil'))
 
