@@ -10,7 +10,7 @@ STANDARD_TOKENS = STANDARD_TYPES.keys()
 tag_name = lambda sn, token: sn + '_' + str(token).replace('.', '_').lower()
 
 
-class PyQuilEditor(gtk.TextView):
+class PyQuilGtkEditor(gtk.TextView):
     def __init__(self):
         gtk.TextView.__init__(self)
         self.buf = buf = self.get_buffer()

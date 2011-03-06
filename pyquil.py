@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from window import PyQuilWindow
+from ui.gtk.window import PyQuilGtkWindow
 
 if __name__ == '__main__':
-    PyQuilWindow().run()
+    PyQuilGtkWindow().run()

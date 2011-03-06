@@ -1,20 +1,21 @@
 import pygtk
 pygtk.require('2.0')
+
 import gtk
 import pango
 import gobject
-from editor import PyQuilEditor
-
 from sqlalchemy import create_engine
 import pyodbc
 
-class PyQuilWindow(gtk.Window):
+from ui.gtk.editor import PyQuilGtkEditor
+
+class PyQuilGtkWindow(gtk.Window):
     def con(self):
         """ This method is required so we can get version 8 of TDS """
         return pyodbc.connect(self.connection_string.get_text().split(':///')[1])
 
     def __init__(self):
-        super(PyQuilWindow, self).__init__()
+        super(PyQuilGtkWindow, self).__init__()
         self.tree_view = None
 
         self.resize(800, 500)
@@ -67,7 +68,7 @@ class PyQuilWindow(gtk.Window):
 
     def add_fresh_document(self, position=-1):
         document = gtk.ScrolledWindow()
-        self.editor = PyQuilEditor()
+        self.editor = PyQuilGtkEditor()
         self.editor.get_buffer().set_text("SELECT * FROM memos")
         document.add(self.editor)
 
