@@ -4,22 +4,17 @@ pygtk.require('2.0')
 import gtk
 import pango
 import gobject
-from sqlalchemy import create_engine
-import pyodbc
 
 from ui.gtk.editor import PyQuilGtkEditor
+from lib.common import _
 
 class PyQuilGtkWindow(gtk.Window):
-    def con(self):
-        """ This method is required so we can get version 8 of TDS """
-        return pyodbc.connect(self.connection_string.get_text().split(':///')[1])
-
     def __init__(self):
         super(PyQuilGtkWindow, self).__init__()
         self.tree_view = None
 
         self.resize(800, 500)
-        self.set_title('PyQuil')
+        self.set_title(_('PyQuil'))
 
         self.vbox = vbox  = gtk.VBox()
         self.add(vbox)
@@ -28,12 +23,31 @@ class PyQuilGtkWindow(gtk.Window):
         self.menus = {}
         self.menubar_items = {}
 
-        vbox.pack_start(self.menubar, False)
+        vbox.pack_start(self.menubar, False, False)
+
+        self.hbox = gtk.HBox()
+        plugin_store = gtk.ListStore(gobject.TYPE_STRING)
+        plugin_store.append ([_("Sql Alchemy")])
+        plugin_store.append ([_("MSSQL")])
+
+        self.combo_plugin = gtk.ComboBox()
+        self.combo_plugin.set_model(plugin_store)
+        cell = gtk.CellRendererText()
+        self.combo_plugin.pack_start(cell, True)
+        self.combo_plugin.add_attribute(cell, 'text', 0)
+        self.combo_plugin.set_active(0)
+
+        self.hbox.pack_start(self.combo_plugin, False, False)
 
         self.connection_string = gtk.Entry()
-        self.connection_string.set_text('sqlite:///test.db')
-        vbox.pack_start(self.connection_string)
+        self.connection_string.set_text(_('sqlite:///test.db'))
+        self.hbox.pack_start(self.connection_string, True)
 
+        self.button_execute = gtk.Button(label=_("Execute"))
+        self.button_execute.connect('clicked', self.execute)
+        self.hbox.pack_start(self.button_execute, False, False)
+
+        self.vbox.pack_start(self.hbox, False, False)
         self.notebook = notebook = gtk.Notebook()
         notebook.set_tab_pos(gtk.POS_TOP)
         notebook.set_scrollable(True)
@@ -43,15 +57,11 @@ class PyQuilGtkWindow(gtk.Window):
         self.documents = []
 
         file_menu = gtk.Menu()
-        menu = self.add_menu('file', '_File', file_menu)
+        menu = self.add_menu('file', _('_File'), file_menu)
 
         new = gtk.ImageMenuItem(gtk.STOCK_NEW)
         new.connect('activate', self.new_file)
         menu.append(new)
-
-        execute = gtk.MenuItem('Execute')
-        execute.connect('activate', self.execute)
-        menu.append(execute)
 
         quit = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         quit.connect('activate', self.quit)
@@ -69,7 +79,7 @@ class PyQuilGtkWindow(gtk.Window):
     def add_fresh_document(self, position=-1):
         document = gtk.ScrolledWindow()
         self.editor = PyQuilGtkEditor()
-        self.editor.get_buffer().set_text("SELECT * FROM memos")
+        self.editor.get_buffer().set_text(_("SELECT * FROM memos"))
         document.add(self.editor)
 
         self.notebook.insert_page(document)
@@ -102,23 +112,25 @@ class PyQuilGtkWindow(gtk.Window):
         gtk.main_quit()
 
     def execute(self, *args):
+        print 'executed'
         buf = self.editor.get_buffer()
         start = buf.get_start_iter()
         end = buf.get_end_iter()
         query = buf.get_slice(start, end)
         conn_string = self.connection_string.get_text()
-        protocol = conn_string.split(':///')[0]
 
-        if protocol.find('mssql') >= 0:
-            e = create_engine(protocol + ':///', creator=self.con)
-        else:
-            e = create_engine(conn_string)
+        data = None
+        plugin = None
+        selected_plugin = self.combo_plugin.get_active_text()
 
-        connection = e.connect()
-        results = connection.execute(query)
-        data = results.fetchall()
-        e.dispose()
-        connection.close()
+        if selected_plugin == _('Sql Alchemy'):
+            from plugins.sqlalchemy import SAQueryPlugin
+            plugin = SAQueryPlugin()
+        elif selected_plugin == _('MSSQL'):
+            from plugins.sqlalchemy import SAQueryPlugin
+            plugin = MSSQLQueryPlugin()
+
+        columns, data = plugin.execute_query(conn_string, query)
 
         types = []
         if data:
@@ -145,7 +157,7 @@ class PyQuilGtkWindow(gtk.Window):
             tvcolumns={} # the columns
             cells={} # the cells
             i=0
-            for c in results.keys(): # the actual column headers
+            for c in columns: # the actual column headers
                 # instantiate TVC
                 tvcolumns[c] = gtk.TreeViewColumn(c)
 
