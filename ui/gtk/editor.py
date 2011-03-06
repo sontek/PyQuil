@@ -25,6 +25,7 @@ class PyQuilDocument(gtk.VBox):
         self.combo_plugin.pack_start(cell, True)
         self.combo_plugin.add_attribute(cell, 'text', 0)
         self.combo_plugin.set_active(0)
+        self.result_window = None
 
         self.hbox.pack_start(self.combo_plugin, False, False)
 
@@ -37,13 +38,12 @@ class PyQuilDocument(gtk.VBox):
         self.hbox.pack_start(self.button_execute, False, False)
 
         self.pack_start(self.hbox, False, False)
+        editor_window = gtk.ScrolledWindow()
         self.editor = PyQuilGtkEditor()
         self.editor.get_buffer().set_text(_("SELECT * FROM memos"))
-        self.pack_start(self.editor, True)
+        editor_window.add(self.editor)
+        self.pack_start(editor_window)
         self.tree_view = None
-
-        if self.tree_view:
-            self.pack_start(tree_view, True)
 
         self.show_all()
 
@@ -77,9 +77,6 @@ class PyQuilDocument(gtk.VBox):
                 for row in [b for a, b in enumerate(data)]:
                     liststore.append([b for a, b in enumerate(row)])
 
-                if (self.tree_view):
-                    self.remove(self.tree_view)
-
                 tree_view = gtk.TreeView(model=liststore)
 
                 tvcolumns={} # the columns
@@ -105,8 +102,7 @@ class PyQuilDocument(gtk.VBox):
                     i+=1
 
                 self.set_treeview(tree_view)
-                self.show()
-                self.tree_view.show()
+                self.show_all()
         except Exception as exc:
             md = gtk.MessageDialog(None,
                     gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR,
@@ -116,8 +112,12 @@ class PyQuilDocument(gtk.VBox):
 
     def set_treeview(self, tree_view):
         self.tree_view = tree_view
-        if self.tree_view:
-            self.pack_start(self.tree_view, True)
+        if self.result_window:
+            self.remove(self.result_window)
+
+        self.result_window = gtk.ScrolledWindow()
+        self.result_window.add(self.tree_view)
+        self.pack_start(self.result_window)
 
 class PyQuilGtkEditor(gtk.TextView):
     def __init__(self):

@@ -31,8 +31,6 @@ class PyQuilGtkWindow(gtk.Window):
         notebook.show_all()
         vbox.pack_start(notebook)
 
-        self.documents = []
-
         file_menu = gtk.Menu()
         menu = self.add_menu('file', _('_File'), file_menu)
 
@@ -53,12 +51,6 @@ class PyQuilGtkWindow(gtk.Window):
     def add_fresh_document(self, position=-1):
         document = PyQuilDocument()
         self.notebook.insert_page(document)
-
-        if position == -1:
-            self.documents.append(document)
-        else:
-            self.documents.insert(position, document)
-
         document.show()
         return document
 
