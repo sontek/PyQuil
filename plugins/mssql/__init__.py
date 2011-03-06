@@ -8,7 +8,7 @@ class MSSQLQueryPlugin(object):
 
     def execute_query(self, connection_string, query):
         self.connection_string = connection_string
-        e = create_engine('mssql:///', creator=self.con)
+        e = create_engine('mssql+pyodbc:///', creator=self.con)
         connection = e.connect()
         results = connection.execute(query)
         data = results.fetchall()
