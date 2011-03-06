@@ -33,5 +33,3 @@ DRIVER={FreeTDS};SERVERNAME=orchid;UID=sa;PWD=pwd;DATABASE=db'
  - ServerName is defined freetds.conf
 
 If you are on windows use DRIVER={SQL SERVER} instead.
-
-MSSQL driver does not support "SELECT \*", you must provide the columns you want.
