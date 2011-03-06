@@ -108,8 +108,8 @@ class PyQuilDocument(gtk.VBox):
                 self.show()
                 self.tree_view.show()
         except Exception as exc:
-            md = gtk.MessageDialog(self, 
-                    gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR, 
+            md = gtk.MessageDialog(None,
+                    gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_ERROR,
                     gtk.BUTTONS_CLOSE, str(exc))
             md.run()
             md.destroy()
