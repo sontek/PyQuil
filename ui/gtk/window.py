@@ -54,6 +54,10 @@ class PyQuilGtkWindow(gtk.Window):
         quit.connect('activate', self.quit)
         menu.append(quit)
 
+        save = gtk.ImageMenuItem(gtk.STOCK_SAVE)
+        save.connect('activate', self.save)
+        menu.append(save)
+
     def __init_notebook(self):
         self.notebook = gtk.Notebook()
         self.notebook.set_tab_pos(gtk.POS_TOP)
@@ -91,6 +95,34 @@ class PyQuilGtkWindow(gtk.Window):
                 page.plugin.disconnect()
 
         gtk.main_quit()
+
+    def save(self, *args):
+        self.notebook.get_current_page()
+        page_num = self.notebook.get_current_page()
+        doc = self.notebook.get_nth_page(page_num)
+        if doc.result_window:
+            dialog = gtk.FileChooserDialog("Save..",
+                                        None,
+                                        gtk.FILE_CHOOSER_ACTION_SAVE,
+                                        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                        gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+
+            dialog.set_default_response(gtk.RESPONSE_OK)
+
+            if dialog.run() == gtk.RESPONSE_OK:
+                filename = dialog.get_filename()
+                liststore = doc.tree_view.get_model()
+
+                csv = ','.join([col.get_title() for col in doc.tree_view.get_columns()]) + '\n'
+
+                for row in liststore:
+                    csv += ','.join(row) + '\n'
+
+                f = open(filename, "w")
+                f.writelines(csv)
+                f.close()
+
+            dialog.destroy()
 
     def run(self):
         gtk.main()

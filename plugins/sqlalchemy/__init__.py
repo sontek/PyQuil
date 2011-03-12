@@ -22,7 +22,6 @@ class SAQueryPlugin(object):
 
     def execute_query(self, query):
         results = self.connection.execute(query)
-
         # if cursor is closed, we aren't fetching rows
         if results.closed:
             return [(_('Results', ))], [(_('%d Row(s) modified' % results.rowcount), )]
