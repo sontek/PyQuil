@@ -1,3 +1,40 @@
+## Setting it up
+Install pygobject header files
+Install header files for unixODBC.
+Install pycairo header files
+
+In Fedora:
+yum install unixODBC-devel
+yum install pygobject2-devel gobject-introspection-devel
+yum install pycairo-devel
+
+Download pygobject:
+http://ftp.gnome.org/pub/GNOME/sources/pygobject/3.0/pygobject-3.0.4.tar.xz
+
+./configure --prefix=<your virtualenv>
+make
+make install
+
+
+
+Download pycairo:
+./waf configure --prefix=<your virtualenv>
+./waf build
+./waf install
+
+
+
+Download pygtk:
+http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.bz2
+
+./configure --prefix=<your virtualenv>
+make
+
+
+
+Then install the python libraries:
+pip install -r requirements.txt
+
 ## SQL Alchemy Plugin
 You need to provide protocol and query string for the conn string to work
 
