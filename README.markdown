@@ -1,4 +1,10 @@
-## Setting it up
+
+## Setting it up with Virtualenv
+Note: PyGTK/pygobject/etc isn't quite ready to be in a virtualenv,
+you must use mkvirtualenv --system-site-packages to use your operating system
+site packages to get those
+
+# Experimental virtualenv docs
 Install pygobject header files
 Install header files for unixODBC.
 Install pycairo header files
