@@ -57,6 +57,7 @@ http://www.sqlalchemy.org/docs/dialects/
 
 ## MSSQL Plugin
 You need to setup FreeTDS and unixodbc:
+
 ### example odbcinst.ini
     [FreeTDS]
         Description = TDS driver (Sybase/MS SQL)
